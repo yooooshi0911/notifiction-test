@@ -1,0 +1,20 @@
+{
+  "name": "iOS通知テスト",
+  "short_name": "通知テスト",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007AFF",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192.png?text=Icon",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512.png?text=Icon",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
