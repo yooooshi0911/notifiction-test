@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iOS PWA通知テスト</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 20px; line-height: 1.6; }
+        button { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 16px; border: none; border-radius: 8px; background-color: #007AFF; color: white; cursor: pointer; }
+        button:disabled { background-color: #ccc; }
+        .note { font-size: 12px; color: #666; margin-bottom: 20px; text-align: left; background: #f0f0f0; padding: 10px; border-radius: 8px; }
+        h1 { font-size: 20px; }
+    </style>
+</head>
+<body>
+    <h1>iOS PWA 通知テスト</h1>
+
+    <div class="note">
+        <strong>重要:</strong><br>
+        このテストを行うには、Safariの「共有」メニューから<strong>「ホーム画面に追加」</strong>を行い、ホーム画面のアイコンから起動してください。
+    </div>
+
+    <div id="status" style="margin-bottom: 20px; color: red;">
+        状態: ブラウザで起動中（インストールしてください）
+    </div>
+
+    <button id="btn-permission" onclick="requestPermission()">1. 通知の許可を求める</button>
+    
+    <button id="btn-test" onclick="triggerNotification()" disabled>2. 5秒後に通知を送る</button>
+    
+    <button id="btn-badge" onclick="setBadge()" disabled>3. バッジ(①)をつける</button>
+    <button id="btn-clear-badge" onclick="clearBadge()" disabled>4. バッジを消す</button>
+
+    <script>
+        // Service Workerの登録
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log("SW Registered"));
+        }
+
+        // PWAとして起動しているかチェック
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+        const statusDiv = document.getElementById('status');
+        
+        if (isStandalone) {
+            statusDiv.innerHTML = "状態: PWAとして起動中 OK✅";
+            statusDiv.style.color = "green";
+        }
+
+        // 1. 許可リクエスト
+        async function requestPermission() {
+            if (!isStandalone && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                alert("iOSでは「ホーム画面に追加」しないと通知の許可が取れません。");
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            alert(`許可状態: ${permission}`);
+            
+            if (permission === 'granted') {
+                document.getElementById('btn-test').disabled = false;
+                document.getElementById('btn-badge').disabled = false;
+                document.getElementById('btn-clear-badge').disabled = false;
+            }
+        }
+
+        // 2. 擬似プッシュ通知（5秒後に発火）
+        function triggerNotification() {
+            alert("5秒後に通知を出します。ホーム画面に戻って待機してください。");
+            
+            setTimeout(async () => {
+                const reg = await navigator.serviceWorker.ready;
+                reg.showNotification("PWAテスト通知", {
+                    body: "これはiOS PWAの通知テストです！成功しました。",
+                    icon: "icon.png",
+                    badge: "icon.png"
+                });
+            }, 5000);
+        }
+
+        // 3. バッジ付与
+        async function setBadge() {
+            if ('setAppBadge' in navigator) {
+                await navigator.setAppBadge(1);
+                alert("アプリアイコンに①がつきました（ホーム画面を確認してください）");
+            } else {
+                alert("このデバイスはバッジに対応していません");
+            }
+        }
+
+        // 4. バッジ削除
+        async function clearBadge() {
+            if ('clearAppBadge' in navigator) {
+                await navigator.clearAppBadge();
+                alert("バッジを削除しました");
+            }
+        }
+    </script>
+</body>
+</html>
